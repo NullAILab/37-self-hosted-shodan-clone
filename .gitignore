@@ -1,0 +1,5 @@
+shodan-clone
+shodan-clone.exe
+*.test
+*.out
+vendor/

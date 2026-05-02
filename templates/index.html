@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Intelligence — Self-Hosted Shodan Clone</title>
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d2e; --border: #2a2d3e;
+      --text: #e2e8f0; --muted: #64748b; --accent: #6366f1;
+      --green: #22c55e; --yellow: #eab308;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: monospace; }
+    header {
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem; display: flex; align-items: center; gap: 2rem;
+    }
+    header h1 { font-size: 1.25rem; }
+    .stats { display: flex; gap: 2rem; margin-left: auto; }
+    .stat span { color: var(--accent); font-weight: 700; }
+    .search-bar { padding: 1rem 2rem; }
+    .search-bar form { display: flex; gap: .5rem; }
+    .search-bar input {
+      flex: 1; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); padding: .5rem 1rem; font-family: monospace;
+    }
+    .search-bar button {
+      background: var(--accent); color: #fff; border: none; border-radius: 4px;
+      padding: .5rem 1.5rem; cursor: pointer;
+    }
+    .hint { color: var(--muted); font-size: .8rem; margin-top: .4rem; }
+    table { width: calc(100% - 4rem); margin: 0 2rem 2rem; border-collapse: collapse; }
+    th, td { padding: .5rem 1rem; border-bottom: 1px solid var(--border); font-size: .85rem; text-align: left; }
+    th { color: var(--muted); background: var(--panel); }
+    tr:hover td { background: rgba(255,255,255,.03); }
+    .badge {
+      display: inline-block; padding: .1rem .5rem; border-radius: 999px;
+      font-size: .7rem; background: rgba(99,102,241,.2); color: var(--accent);
+    }
+    code { font-family: monospace; color: var(--green); font-size: .8rem; }
+    .empty { color: var(--muted); text-align: center; padding: 2rem; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🔍 Network Intelligence Dashboard</h1>
+  <div class="stats">
+    <div class="stat">Hosts: <span>{{index .stats "hosts"}}</span></div>
+    <div class="stat">Services: <span>{{index .stats "services"}}</span></div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <form action="/api/search" method="get" target="_blank">
+    <input type="text" name="q" placeholder="port:22  service:http  ip:192.168.1  banner:nginx">
+    <button type="submit">Search</button>
+  </form>
+  <div class="hint">Tokens: <code>port:N</code> &nbsp; <code>service:NAME</code> &nbsp; <code>ip:PREFIX</code> &nbsp; <code>banner:TEXT</code></div>
+</div>
+
+<table>
+  <thead>
+    <tr><th>IP</th><th>Port</th><th>Service</th><th>Version</th><th>Banner (truncated)</th><th>Scanned</th></tr>
+  </thead>
+  <tbody>
+    {{range .hosts}}
+      {{$ip := .IP}}
+      {{range .Services}}
+      <tr>
+        <td><a href="/api/host/{{$ip}}" target="_blank">{{$ip}}</a></td>
+        <td><span class="badge">{{.Port}}</span></td>
+        <td>{{.Service}}</td>
+        <td>{{.Version}}</td>
+        <td><code>{{if gt (len .Banner) 80}}{{slice .Banner 0 80}}…{{else}}{{.Banner}}{{end}}</code></td>
+        <td>{{.ScannedAt.Format "2006-01-02 15:04"}}</td>
+      </tr>
+      {{end}}
+    {{else}}
+      <tr><td colspan="6" class="empty">No hosts indexed yet — run a scan via POST /api/scan</td></tr>
+    {{end}}
+  </tbody>
+</table>
+</body>
+</html>
